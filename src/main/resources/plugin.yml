@@ -1,0 +1,56 @@
+name: CompletosCore
+version: '${project.version}'
+main: me.blancocl.completoscore.CompletosCore
+api-version: '1.20'
+softdepend: [ Vault, ProtocolLib, PlaceholderAPI ]
+libraries:
+  - org.jsoup:jsoup:1.16.1
+
+commands:
+  saltar:
+    description: "Comando de Saltar"
+    permission: CompletosCore.command.jump
+  gm:
+    description: "Comando de Gamemode"
+    permission: CompletosCore.command.gamemode
+  v3:
+    description: "Comando de V3 jumplates"
+    permission: CompletosCore.command.jumplates
+  velocidad:
+    description: "Comando de Velocidad"
+    permission: CompletosCore.command.speed
+  cosmeticos:
+    description: "Comando de Cosmeticos"
+    permission: CompletosCore.command.cosmetics
+  cabezas:
+    description: "Comando de Cabezas"
+    permission: CompletosCore.command.heads
+  particles:
+    description: "Comando de Particulas"
+    permission: CompletosCore.command.particles
+  npc:
+    description: "Comando de NPC"
+    permission: CompletosCore.command.npc
+  volar:
+    description: "Comando de Volar"
+    permission: CompletosCore.command.fly
+  tag:
+    description: "Comando de Tag"
+    permission: CompletosCore.command.tag
+  preferencias:
+    description: "Abre un GUI"
+    #usage: "/gui"
+    permission: CompletosCore.command.preferences
+  economia:
+    description: "Economia de CompletosCraft"
+   #usage: "/economia <ver/tomar/dar> <jugador> [cantidad]"
+    aliases: [ eco, dinero, plata, money, balance, bal, completos ]
+    permission: CompletosCore.command.economy
+  setspawn:
+    description: "Setea el spawn principal del lobby"
+    permission: CompletosCore.setspawn
+  spawn:
+    description: "Te llevas al spawn principal"
+permissions:
+  CompletosCore.setspawn:
+    default: op
