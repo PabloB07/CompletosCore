@@ -27,7 +27,7 @@ public final class JumpPlates implements CommandExecutor, Listener {
 
         // Coloca una placa de salto en la posición actual del jugador
         Block jumpPlate = location.getBlock();
-        jumpPlate.setType(Material.STONE_PRESSURE_PLATE);
+        jumpPlate.setType(Material.HEAVY_WEIGHTED_PRESSURE_PLATE);
         sender.sendMessage("¡Placa de salto creada!");
 
         return true;
@@ -39,8 +39,9 @@ public final class JumpPlates implements CommandExecutor, Listener {
         Location location = player.getLocation();
         Block block = location.getBlock();
 
-        if (block.getType() == Material.STONE_PRESSURE_PLATE) {
-            player.setVelocity(new org.bukkit.util.Vector(jumpForce.getX(), jumpForce.getY(), jumpForce.getZ()));
+        if (block.getType() == Material.HEAVY_WEIGHTED_PRESSURE_PLATE) {
+            //player.setVelocity(new org.bukkit.util.Vector(jumpForce.getX(), jumpForce.getY(), jumpForce.getZ()));
+            player.setVelocity(player.getLocation().getDirection().multiply(8));
         }
     }
 }
