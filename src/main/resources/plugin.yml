@@ -7,6 +7,15 @@ libraries:
   - org.jsoup:jsoup:1.16.1
 
 commands:
+  cartel:
+    description: "Comando de Cartel"
+    permission: CompletosCore.command.cartel
+  region:
+    description: "Comando de Region"
+    permission: CompletosCore.command.region
+  board:
+    description: "Comando de board toggler"
+    permission: CompletosCore.command.board
   saltar:
     description: "Comando de Saltar"
     permission: CompletosCore.command.jump

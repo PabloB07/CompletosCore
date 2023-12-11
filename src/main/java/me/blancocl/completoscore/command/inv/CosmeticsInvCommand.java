@@ -44,7 +44,7 @@ public class CosmeticsInvCommand extends FastInv {
     @Override
     public void onClick(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();
-        ButterflyTask instance = ButterflyTask.getInstance();
+        ButterflyTask instance = (ButterflyTask) ButterflyTask.getInstance();
 
         if (event.getSlot() == 20) {
             if (instance.hasPlayer(player.getUniqueId())) {

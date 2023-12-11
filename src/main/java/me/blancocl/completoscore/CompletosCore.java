@@ -4,7 +4,6 @@ package me.blancocl.completoscore;
 //import de.slikey.effectlib.EffectManager;
 import fr.mrmicky.fastboard.FastBoard;
 import fr.mrmicky.fastinv.FastInvManager;
-import lombok.Getter;
 import me.blancocl.completoscore.command.*;
 import me.blancocl.completoscore.hook.CompletosEconomy;
 import me.blancocl.completoscore.hook.PlaceholderAPIHook;
@@ -12,29 +11,43 @@ import me.blancocl.completoscore.hook.ProtocolLibHook;
 import me.blancocl.completoscore.hook.VaultHook;
 import me.blancocl.completoscore.listener.*;
 import me.blancocl.completoscore.npc.NPC;
+import me.blancocl.completoscore.particles.Particles;
+import me.blancocl.completoscore.settings.CompletosCoreSettings;
 import me.blancocl.completoscore.task.ButterflyTask;
+import me.blancocl.completoscore.task.ItemPickupTask;
+import me.blancocl.completoscore.task.TablistTask;
+import me.blancocl.completoscore.util.Bungee;
 import me.blancocl.completoscore.util.Hex;
 import net.md_5.bungee.api.ChatColor;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import redempt.redlib.region.Region;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public final class CompletosCore extends JavaPlugin implements Listener {
 	//private static EffectLib instance;
-
-	@Getter
-	private static final Map<UUID, String> playerTags = new HashMap<>();
-	private BukkitTask task;
+	private BukkitRunnable particleTask;
+	private BukkitTask task3;
+	private BukkitTask task4;
+	private BukkitTask task5;
+	//private static final Map<UUID, String> playerTags = new HashMap<>();
 	private final Map<UUID, FastBoard> boards = new HashMap<>();
+
+	private Map<LivingEntity, Player> pets = new HashMap<>();
 
 	@Override
 	public void onEnable() {
+		new PetListener.PetAIUpdater().runTaskTimer(this, 0, 20); // Actualiza cada segundo
+
 		// Board register and events with AsyncTask
 		getServer().getPluginManager().registerEvents(this, this);
 		getServer().getScheduler().runTaskTimer(this, () -> {
@@ -45,7 +58,11 @@ public final class CompletosCore extends JavaPlugin implements Listener {
 
 		FastInvManager.register(this);
 
-		// Events
+		// Eventos
+		getServer().getPluginManager().registerEvents(new PlayerListener(), this);
+		getServer().getPluginManager().registerEvents(new SignListener(), this);
+		getServer().getPluginManager().registerEvents(new Particles(), this);
+		getServer().getPluginManager().registerEvents(new PetListener(this), this);
 		getServer().getPluginManager().registerEvents(new GamemodeCommand(), this);
 		getServer().getPluginManager().registerEvents(new EntityListener(), this);
 		getServer().getPluginManager().registerEvents(new JumpPlates(), this);
@@ -56,7 +73,10 @@ public final class CompletosCore extends JavaPlugin implements Listener {
 		getServer().getPluginManager().registerEvents(new SpawnListener(this), this);
 		
 
-		// Commands
+		// Comandos
+		Objects.requireNonNull(getCommand("region")).setExecutor(new RegionCommand());
+		Objects.requireNonNull(getCommand("cartel")).setExecutor(new SignCommand());
+		Objects.requireNonNull(getCommand("board")).setExecutor(new BoardToggle());
 		Objects.requireNonNull(getCommand("saltar")).setExecutor(new JumpCommand());
 		Objects.requireNonNull(getCommand("gm")).setExecutor(new GamemodeCommand());
 		Objects.requireNonNull(getCommand("v3")).setExecutor(new JumpPlates());
@@ -67,10 +87,9 @@ public final class CompletosCore extends JavaPlugin implements Listener {
 		Objects.requireNonNull(getCommand("setspawn")).setExecutor(new SetSpawnCommand(this));
 		Objects.requireNonNull(getCommand("spawn")).setExecutor(new SpawnCommand(this));
 		Objects.requireNonNull(getCommand("volar")).setExecutor(new FlyCommand());
-		Objects.requireNonNull(getCommand("tag")).setExecutor(new TagCommand());
 		Objects.requireNonNull(getCommand("npc")).setExecutor(new NPC());
 
-		// Hooks Register
+		// Hooks Registrador
 		if (getServer().getPluginManager().getPlugin("ProtocolLib") != null)
 			ProtocolLibHook.register();
 
@@ -80,17 +99,38 @@ public final class CompletosCore extends JavaPlugin implements Listener {
 		if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null)
 			PlaceholderAPIHook.registerHook();
 
-		task = getServer().getScheduler().runTaskTimer(this, ButterflyTask.getInstance(), 0, 1);
+		BukkitTask task3 = getServer().getScheduler().runTaskTimer(this, ButterflyTask.getInstance(), 0, 1);
+		BukkitTask task4 = getServer().getScheduler().runTaskTimer(this, TablistTask.getInstance(), 0, 20);
+		BukkitTask task5 = getServer().getScheduler().runTaskTimer(this, ItemPickupTask.getInstance(), 0, 2);
 		//getServer().getScheduler().runTaskTimer(this, CompletoBoardTask.getInstance(), 0, 1);
+		this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+		this.getServer().getMessenger().registerIncomingPluginChannel(this, "BungeeCord", new Bungee());
+
+		CompletosCoreSettings.getInstance().load();
+		//CompletosCoreSettings.getInstance().set("Tablist.Header", CompletosCoreSettings.getInstance().getHeaderLines());
+		//CompletosCoreSettings.getInstance().set("Tablist.Footer", CompletosCoreSettings.getInstance().getFooterLines());
 	}
 
 
 	@Override
 	public void onDisable() {
-		if (task != null) {
-			task.cancel();
-			task = null;
+		if (task3 != null) {
+			task3.cancel();
+			task3 = null;
 		}
+		if (particleTask != null) {
+			particleTask.cancel();
+		}
+		if (task4 != null) {
+			task4.cancel();
+			task4 = null;
+		}
+		if (task5 != null) {
+			task5.cancel();
+			task5 = null;
+		}
+		this.boards.clear();
+		this.pets.clear();
 		this.getServer().getMessenger().unregisterOutgoingPluginChannel(this);
 		this.getServer().getMessenger().unregisterIncomingPluginChannel(this);
 	}
@@ -137,8 +177,17 @@ public final class CompletosCore extends JavaPlugin implements Listener {
 	}
 
 	private void updateBoard(FastBoard board) {
-		// Board updated
+		// Create SimpleDateFormat with UTC-3 time zone for Chile
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		sdf.setTimeZone(TimeZone.getTimeZone("UTC-3"));
+
+		// Format and print the current date
+		Date currentDate = new Date();
+		String formattedDate = sdf.format(currentDate);
+
+		// Board actualizado X segundos
 		board.updateLines(
+				Hex.message("#4287f5" + formattedDate),
 				"",
 				Hex.message("#fcba03Nombre» " + board.getPlayer().getName()),
 				"",

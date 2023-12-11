@@ -15,13 +15,17 @@ import java.util.UUID;
 
 public final class ButterflyTask implements Runnable {
 
-	@Getter
 	private static final ButterflyTask instance = new ButterflyTask();
 
 	private final Set<UUID> viewingWings = new HashSet<>();
 
 	private ButterflyTask() {
 	}
+
+	public static Runnable getInstance() {
+		return ButterflyTask.instance;
+	}
+
 
 	@Override
 	public void run() {

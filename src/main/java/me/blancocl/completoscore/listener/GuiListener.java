@@ -14,7 +14,7 @@ public final class GuiListener implements Listener {
 	@EventHandler
 	public void onClick(InventoryClickEvent event) {
 		Player player = (Player) event.getWhoClicked();
-		ButterflyTask instance = ButterflyTask.getInstance();
+		ButterflyTask instance = (ButterflyTask) ButterflyTask.getInstance();
 
 		if (player.hasMetadata("OpenedMenu")) {
 			event.setCancelled(true);
